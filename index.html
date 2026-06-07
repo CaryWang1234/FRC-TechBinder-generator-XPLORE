@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIRST Tech Binder Generator</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel-bg: #1e293b;
+            --card-bg: #1a1f2e;
+            --border: #334155;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #f97316;
+            --accent2: #3b82f6;
+            --accent3: #10b981;
+            --danger: #ef4444;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --input-focus: #f97316;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --transition: 0.2s ease;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Segoe UI','Inter','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+        .topbar{background:var(--panel-bg);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10;gap:16px;flex-wrap:wrap;}
+        .topbar .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;white-space:nowrap;color:#fff;}
+        .topbar .logo .icon{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e04e00);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+        .topbar .actions{display:flex;gap:10px;flex-wrap:wrap;}
+        .btn{padding:9px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:0.9rem;font-weight:600;transition:var(--transition);white-space:nowrap;letter-spacing:0.01em;display:flex;align-items:center;gap:6px;}
+        .btn-primary{background:var(--accent);color:#fff;}
+        .btn-primary:hover{background:#e8680a;transform:translateY(-1px);box-shadow:0 4px 16px rgba(249,115,22,0.35);}
+        .btn-secondary{background:var(--accent2);color:#fff;}
+        .btn-secondary:hover{background:#2563eb;transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,0.35);}
+        .btn-outline{background:transparent;border:2px solid var(--border);color:var(--text);}
+        .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(249,115,22,0.06);}
+        .btn-sm{padding:5px 12px;font-size:0.8rem;border-radius:4px;}
+        .btn-danger-sm{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:4px 10px;font-size:0.75rem;border-radius:4px;cursor:pointer;transition:var(--transition);}
+        .btn-danger-sm:hover{background:var(--danger);color:#fff;}
+        .main-container{display:flex;flex:1;overflow:hidden;gap:0;}
+        .form-panel{width:480px;min-width:380px;background:var(--panel-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+        .tab-nav{display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;background:#151d2b;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+        .tab-btn{padding:8px 13px;border-radius:6px;border:none;cursor:pointer;font-size:0.8rem;font-weight:500;background:transparent;color:var(--text-secondary);transition:var(--transition);white-space:nowrap;flex-shrink:0;}
+        .tab-btn.active{background:var(--accent);color:#fff;font-weight:600;}
+        .tab-btn:hover:not(.active){background:rgba(255,255,255,0.04);color:#fff;}
+        .form-content{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px;}
+        .form-content::-webkit-scrollbar{width:5px;}
+        .form-content::-webkit-scrollbar-thumb{background:#475569;border-radius:10px;}
+        .tab-panel{display:none;flex-direction:column;gap:14px;animation:fadeSlide 0.25s ease;}
+        .tab-panel.active{display:flex;}
+        @keyframes fadeSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+        .form-group{display:flex;flex-direction:column;gap:5px;}
+        .form-group label{font-size:0.82rem;font-weight:600;color:#cbd5e1;letter-spacing:0.01em;}
+        .form-group label .hint{font-weight:400;color:var(--text-secondary);font-size:0.72rem;}
+        .form-group input,.form-group textarea,.form-group select{background:var(--input-bg);border:1.5px solid var(--input-border);border-radius:var(--radius-sm);padding:10px 12px;color:#fff;font-size:0.88rem;font-family:inherit;transition:var(--transition);resize:vertical;width:100%;}
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--input-focus);box-shadow:0 0 0 3px rgba(249,115,22,0.1);}
+        .form-group textarea{min-height:70px;line-height:1.5;}
+        .form-row{display:flex;gap:10px;}
+        .form-row .form-group{flex:1;}
+        .color-picker-group{display:flex;align-items:center;gap:10px;}
+        .color-picker-group input[type="color"]{width:45px;height:38px;padding:2px;cursor:pointer;border:2px solid var(--border);border-radius:6px;background:transparent;}
+        .color-picker-group input[type="color"]:focus{border-color:var(--input-focus);}
+        .dynamic-list{display:flex;flex-direction:column;gap:10px;}
+        .dynamic-item{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;}
+        .dynamic-item .remove-btn{position:absolute;top:8px;right:8px;}
+        .add-btn-row{display:flex;justify-content:center;padding:4px 0;}
+        .section-title{font-size:0.85rem;font-weight:700;color:#fff;padding:6px 0 2px 0;border-bottom:2px solid var(--accent);display:inline-block;margin-bottom:2px;letter-spacing:0.02em;}
+        .preview-panel{flex:1;display:flex;flex-direction:column;background:#0a0f18;overflow:hidden;}
+        .preview-header{padding:8px 16px;background:#111827;border-bottom:1px solid var(--border);font-size:0.8rem;color:var(--text-secondary);flex-shrink:0;display:flex;align-items:center;gap:8px;}
+        .preview-header .dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);animation:pulse 2s infinite;}
+        @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+        .preview-frame{flex:1;border:none;background:#fff;width:100%;height:100%;}
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 24px;border-radius:30px;font-weight:600;font-size:0.9rem;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,0.5);border:1px solid var(--accent3);animation:toastIn 0.3s ease,toastOut 0.3s ease 2.2s forwards;pointer-events:none;}
+        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+        @keyframes toastOut{from{opacity:1;transform:translateX(-50%) translateY(0);}to{opacity:0;transform:translateX(-50%) translateY(-10px);}}
+        @media(max-width:900px){.main-container{flex-direction:column;}.form-panel{width:100%;min-width:auto;max-height:50vh;border-right:none;border-bottom:1px solid var(--border);}.preview-panel{min-height:40vh;}.topbar{padding:8px 12px;gap:8px;}.topbar .logo{font-size:1rem;}.btn{padding:7px 13px;font-size:0.8rem;}}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="logo"><div class="icon">🤖</div><span>FIRST Tech Binder Generator</span></div>
+        <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="resetAll()">🔄 Reset</button>
+            <button class="btn btn-secondary" onclick="downloadBinder()">📥 Download HTML</button>
+            <button class="btn btn-primary" onclick="copyHTML()">📋 Copy HTML Code</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="form-panel" id="formPanel">
+            <div class="tab-nav" id="tabNav">
+                <button class="tab-btn active" data-tab="tab-team">🏠 Team Info</button>
+                <button class="tab-btn" data-tab="tab-design">🎯 Design Strategy</button>
+                <button class="tab-btn" data-tab="tab-mech">⚙️ Mechanical</button>
+                <button class="tab-btn" data-tab="tab-elec">🔌 Electronics</button>
+                <button class="tab-btn" data-tab="tab-software">💻 Software</button>
+                <button class="tab-btn" data-tab="tab-iterations">📝 Iterations</button>
+                <button class="tab-btn" data-tab="tab-specs">📊 Specifications</button>
+                <button class="tab-btn" data-tab="tab-images">📷 Images</button>
+                <button class="tab-btn" data-tab="tab-theme">🎨 Theme</button>
+            </div>
+            <div class="form-content" id="formContent">
+                <!-- Team Info -->
+                <div class="tab-panel active" id="tab-team">
+                    <span class="section-title">Team Information</span>
+                    <div class="form-row"><div class="form-group"><label>Team Number</label><input type="text" id="teamNumber"></div><div class="form-group"><label>Team Name</label><input type="text" id="teamName"></div></div>
+                    <div class="form-row"><div class="form-group"><label>Season</label><input type="text" id="season"></div><div class="form-group"><label>Robot Name</label><input type="text" id="robotName"></div></div>
+                    <div class="form-group"><label>Location</label><input type="text" id="location"></div>
+                    <div class="form-group"><label>Sponsors</label><textarea id="sponsors" rows="2"></textarea></div>
+                    <span class="section-title">Robot Overview</span>
+                    <div class="form-group"><label>General Description</label><textarea id="robotOverview" rows="3"></textarea></div>
+                    <div class="form-group"><label>Core Strengths</label><textarea id="strengths" rows="2"></textarea></div>
+                    <div class="form-group"><label>Play Style</label><select id="playStyle"><option value="">-- Select --</option><option value="Offensive – scoring focused">Offensive</option><option value="Defensive – blocking focused">Defensive</option><option value="All-rounder – balanced">All-rounder</option><option value="Support – assisting partners">Support</option></select></div>
+                </div>
+                <!-- Design -->
+                <div class="tab-panel" id="tab-design">
+                    <span class="section-title">Design Strategy</span>
+                    <div class="form-group"><label>Design Goals</label><textarea id="designGoals" rows="3"></textarea></div>
+                    <div class="form-group"><label>Key Decisions</label><textarea id="keyDecisions" rows="3"></textarea></div>
+                    <div class="form-group"><label>Trade-offs</label><textarea id="tradeoffs" rows="3"></textarea></div>
+                    <div class="form-group"><label>Inspiration</label><textarea id="inspiration" rows="2"></textarea></div>
+                </div>
+                <!-- Mechanical -->
+                <div class="tab-panel" id="tab-mech">
+                    <span class="section-title">Mechanical Subsystems</span>
+                    <div class="dynamic-list" id="mechSystemsList"></div>
+                    <div class="add-btn-row"><button class="btn btn-outline btn-sm" onclick="addMechSystem()">+ Add Subsystem</button></div>
+                </div>
+                <!-- Electronics -->
+                <div class="tab-panel" id="tab-elec">
+                    <span class="section-title">Electronics</span>
+                    <div class="form-group"><label>Main Controller</label><select id="controller"><option value="">-- Select --</option><option value="RoboRIO 2.0">RoboRIO 2.0</option><option value="RoboRIO 1.0">RoboRIO 1.0</option><option value="REV Control Hub">REV Control Hub</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Motor Controllers</label><textarea id="motorControllers" rows="2"></textarea></div>
+                    <div class="form-group"><label>Sensors</label><textarea id="sensors" rows="2"></textarea></div>
+                    <div class="form-group"><label>Pneumatics</label><textarea id="pneumatics" rows="2"></textarea></div>
+                    <div class="form-group"><label>Power Management</label><textarea id="powerMgmt" rows="2"></textarea></div>
+                    <div class="form-group"><label>Communication</label><textarea id="communication" rows="2"></textarea></div>
+                </div>
+                <!-- Software -->
+                <div class="tab-panel" id="tab-software">
+                    <span class="section-title">Software</span>
+                    <div class="form-group"><label>Language</label><select id="programLang"><option value="">-- Select --</option><option value="Java">Java</option><option value="C++">C++</option><option value="Python">Python</option><option value="Kotlin">Kotlin</option><option value="LabVIEW">LabVIEW</option></select></div>
+                    <div class="form-group"><label>Core Features</label><textarea id="keyFeatures" rows="3"></textarea></div>
+                    <div class="form-group"><label>Autonomous</label><textarea id="autonomous" rows="3"></textarea></div>
+                    <div class="form-group"><label>Vision</label><textarea id="vision" rows="3"></textarea></div>
+                    <div class="form-group"><label>Driver Interface</label><textarea id="driverUI" rows="2"></textarea></div>
+                </div>
+                <!-- Iterations -->
+                <div class="tab-panel" id="tab-iterations">
+                    <span class="section-title">Iterations</span>
+                    <div class="dynamic-list" id="iterationsList"></div>
+                    <div class="add-btn-row"><button class="btn btn-outline btn-sm" onclick="addIteration()">+ Add Record</button></div>
+                </div>
+                <!-- Specs -->
+                <div class="tab-panel" id="tab-specs">
+                    <span class="section-title">Specifications</span>
+                    <div class="form-row"><div class="form-group"><label>Weight</label><input type="text" id="specWeight"></div><div class="form-group"><label>Dimensions</label><input type="text" id="specDimensions"></div></div>
+                    <div class="form-row"><div class="form-group"><label>Max Speed</label><input type="text" id="specSpeed"></div><div class="form-group"><label>Chassis</label><input type="text" id="specChassis"></div></div>
+                    <div class="form-row"><div class="form-group"><label>Scoring</label><input type="text" id="specIntake"></div><div class="form-group"><label>Climbing</label><input type="text" id="specClimb"></div></div>
+                    <div class="form-group"><label>Additional</label><textarea id="specOther" rows="3"></textarea></div>
+                </div>
+                <!-- Images -->
+                <div class="tab-panel" id="tab-images">
+                    <span class="section-title">Gallery Images</span>
+                    <div class="dynamic-list" id="imagesList"></div>
+                    <div class="add-btn-row"><button class="btn btn-outline btn-sm" onclick="addImage()">+ Add Image</button></div>
+                </div>
+                <!-- Theme -->
+                <div class="tab-panel" id="tab-theme">
+                    <span class="section-title">Cover Photo</span>
+                    <div class="form-group"><label>Image URL</label><input type="text" id="coverImageUrl"></div>
+                    <div class="form-row"><div class="form-group"><label>Width</label><input type="text" id="coverImageWidth" value="45%"></div><div class="form-group"><label>Height</label><input type="text" id="coverImageHeight" value="auto"></div></div>
+                    <div class="form-group"><label>Effect</label><select id="coverEffect"><option value="none">None</option><option value="shadow">Shadow</option><option value="rounded">Rounded</option><option value="blur">Blur</option><option value="grayscale">Grayscale</option><option value="float">Float</option></select></div>
+                    <span class="section-title">Mechanical Images</span>
+                    <div class="form-row"><div class="form-group"><label>Width</label><input type="text" id="mechImageWidth" value="100%"></div><div class="form-group"><label>Height</label><input type="text" id="mechImageHeight" value="auto"></div></div>
+                    <div class="form-group"><label>Effect</label><select id="mechImageEffect"><option value="none">None</option><option value="shadow">Shadow</option><option value="rounded">Rounded</option><option value="blur">Blur</option><option value="grayscale">Grayscale</option><option value="float">Float</option></select></div>
+                    <span class="section-title">Cover Background</span>
+                    <div class="form-row"><div class="form-group"><label>Type</label><select id="coverBgType"><option value="gradient">Gradient</option><option value="solid">Solid</option></select></div></div>
+                    <div class="form-row"><div class="form-group"><label>Color 1</label><div class="color-picker-group"><input type="color" id="coverColor1" value="#1a3c5e"><span id="coverColor1Text">#1a3c5e</span></div></div><div class="form-group" id="coverColor2Group"><label>Color 2</label><div class="color-picker-group"><input type="color" id="coverColor2" value="#0f2740"><span id="coverColor2Text">#0f2740</span></div></div></div>
+                    <span class="section-title">Page Theme</span>
+                    <div class="form-row"><div class="form-group"><label>Body BG</label><div class="color-picker-group"><input type="color" id="bodyBgColor" value="#f8fafc"><span id="bodyBgColorText">#f8fafc</span></div></div><div class="form-group"><label>Card BG</label><div class="color-picker-group"><input type="color" id="cardBgColor" value="#ffffff"><span id="cardBgColorText">#ffffff</span></div></div></div>
+                    <div class="form-row"><div class="form-group"><label>Text</label><div class="color-picker-group"><input type="color" id="textColor" value="#1e293b"><span id="textColorText">#1e293b</span></div></div><div class="form-group"><label>Secondary Text</label><div class="color-picker-group"><input type="color" id="secondaryTextColor" value="#475569"><span id="secondaryTextColorText">#475569</span></div></div></div>
+                    <div class="form-row"><div class="form-group"><label>Primary</label><div class="color-picker-group"><input type="color" id="primaryColor" value="#1a3c5e"><span id="primaryColorText">#1a3c5e</span></div></div><div class="form-group"><label>Accent</label><div class="color-picker-group"><input type="color" id="accentColor" value="#f97316"><span id="accentColorText">#f97316</span></div></div></div>
+                    <div class="form-group"><label>Highlight BG</label><div class="color-picker-group"><input type="color" id="highlightBg" value="#fff7ed"><span id="highlightBgText">#fff7ed</span></div></div>
+                    <div class="form-group"><label>Font</label><select id="fontSelect" onchange="updateFont()"><option value="default">Default</option><option value="Arial, sans-serif">Arial</option><option value="'Times New Roman', serif">Times New Roman</option><option value="'Roboto', sans-serif">Roboto</option><option value="'Open Sans', sans-serif">Open Sans</option><option value="custom">Custom...</option></select><input type="text" id="fontCustom" placeholder="e.g., 'Poppins', sans-serif" style="display:none;margin-top:5px;"></div>
+                    <div class="form-group"><label>Google Font URL</label><input type="text" id="googleFontUrl"></div>
+                    <button class="btn btn-outline btn-sm" onclick="resetTheme()" style="align-self:flex-start;">↩ Reset Theme</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-header"><span class="dot"></span> Live Preview</div>
+            <iframe class="preview-frame" id="previewFrame" title="Preview"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            teamNumber:'',teamName:'',season:'',robotName:'',location:'',sponsors:'',
+            robotOverview:'',strengths:'',playStyle:'',
+            designGoals:'',keyDecisions:'',tradeoffs:'',inspiration:'',
+            mechSystems:[],
+            controller:'',motorControllers:'',sensors:'',pneumatics:'',powerMgmt:'',communication:'',
+            programLang:'',keyFeatures:'',autonomous:'',vision:'',driverUI:'',
+            iterations:[],
+            specWeight:'',specDimensions:'',specSpeed:'',specChassis:'',specIntake:'',specClimb:'',specOther:'',
+            images:[],
+            coverImageUrl:'', coverImageWidth:'45%', coverImageHeight:'auto', coverEffect:'none',
+            mechImageWidth:'100%', mechImageHeight:'auto', mechImageEffect:'none',
+            coverBgType:'gradient', coverColor1:'#1a3c5e', coverColor2:'#0f2740',
+            bodyBgColor:'#f8fafc', cardBgColor:'#ffffff', textColor:'#1e293b', secondaryTextColor:'#475569',
+            primaryColor:'#1a3c5e', accentColor:'#f97316', highlightBg:'#fff7ed',
+            fontFamily:'', googleFontUrl:''
+        };
+
+        function initDynamicLists(){
+            if(data.mechSystems.length===0) data.mechSystems=[{name:'',type:'',description:'',materials:'',notes:'',imageUrl:''},{name:'',type:'',description:'',materials:'',notes:'',imageUrl:''}];
+            if(data.iterations.length===0) data.iterations=[{date:'',change:'',reason:'',result:''},{date:'',change:'',reason:'',result:''}];
+            if(data.images.length===0) data.images=[{url:'',caption:''}];
+            renderAll();
+        }
+        function renderAll(){renderMechSystems();renderIterations();renderImages();}
+        function renderMechSystems(){
+            document.getElementById('mechSystemsList').innerHTML = data.mechSystems.map((m,i)=>`
+                <div class="dynamic-item"><button class="remove-btn btn-danger-sm" onclick="removeMechSystem(${i})">✕</button>
+                    <div class="form-row"><div class="form-group"><label>Name</label><input value="${escAttr(m.name)}" data-mech="${i}" data-field="name"></div><div class="form-group"><label>Type</label><input value="${escAttr(m.type)}" data-mech="${i}" data-field="type"></div></div>
+                    <div class="form-group"><label>Description</label><textarea data-mech="${i}" data-field="description" rows="2">${escHtml(m.description)}</textarea></div>
+                    <div class="form-row"><div class="form-group"><label>Materials</label><input value="${escAttr(m.materials)}" data-mech="${i}" data-field="materials"></div><div class="form-group"><label>Notes</label><input value="${escAttr(m.notes)}" data-mech="${i}" data-field="notes"></div></div>
+                    <div class="form-group"><label>Image URL</label><input value="${escAttr(m.imageUrl||'')}" data-mech="${i}" data-field="imageUrl" placeholder="https://... (optional)"></div>
+                </div>`).join('');
+            bindMechInputs();
+        }
+        function bindMechInputs(){document.querySelectorAll('[data-mech]').forEach(e=>{e.removeEventListener('input',mechHandler);e.addEventListener('input',mechHandler);});}
+        function mechHandler(e){const i=parseInt(e.target.dataset.mech);if(data.mechSystems[i]){data.mechSystems[i][e.target.dataset.field]=e.target.value;updatePreview();}}
+        function addMechSystem(){data.mechSystems.push({name:'',type:'',description:'',materials:'',notes:'',imageUrl:''});renderMechSystems();updatePreview();}
+        function removeMechSystem(i){if(data.mechSystems.length<=1)return;data.mechSystems.splice(i,1);renderMechSystems();updatePreview();}
+
+        function renderIterations(){
+            document.getElementById('iterationsList').innerHTML = data.iterations.map((it,i)=>`
+                <div class="dynamic-item"><button class="remove-btn btn-danger-sm" onclick="removeIteration(${i})">✕</button>
+                    <div class="form-row"><div class="form-group"><label>Date</label><input value="${escAttr(it.date)}" data-iter="${i}" data-field="date"></div><div class="form-group"><label>Change</label><input value="${escAttr(it.change)}" data-iter="${i}" data-field="change"></div></div>
+                    <div class="form-row"><div class="form-group"><label>Reason</label><input value="${escAttr(it.reason)}" data-iter="${i}" data-field="reason"></div><div class="form-group"><label>Outcome</label><input value="${escAttr(it.result)}" data-iter="${i}" data-field="result"></div></div>
+                </div>`).join('');
+            bindIterInputs();
+        }
+        function bindIterInputs(){document.querySelectorAll('[data-iter]').forEach(e=>{e.removeEventListener('input',iterHandler);e.addEventListener('input',iterHandler);});}
+        function iterHandler(e){const i=parseInt(e.target.dataset.iter);if(data.iterations[i]){data.iterations[i][e.target.dataset.field]=e.target.value;updatePreview();}}
+        function addIteration(){data.iterations.push({date:'',change:'',reason:'',result:''});renderIterations();updatePreview();}
+        function removeIteration(i){if(data.iterations.length<=1)return;data.iterations.splice(i,1);renderIterations();updatePreview();}
+
+        function renderImages(){
+            document.getElementById('imagesList').innerHTML = data.images.map((img,i)=>`
+                <div class="dynamic-item"><button class="remove-btn btn-danger-sm" onclick="removeImage(${i})">✕</button>
+                    <div class="form-group"><label>URL</label><input value="${escAttr(img.url)}" data-img="${i}" data-field="url"></div>
+                    <div class="form-group"><label>Caption</label><input value="${escAttr(img.caption)}" data-img="${i}" data-field="caption"></div>
+                </div>`).join('');
+            bindImageInputs();
+        }
+        function bindImageInputs(){document.querySelectorAll('[data-img]').forEach(e=>{e.removeEventListener('input',imgHandler);e.addEventListener('input',imgHandler);});}
+        function imgHandler(e){const i=parseInt(e.target.dataset.img);if(data.images[i]){data.images[i][e.target.dataset.field]=e.target.value;updatePreview();}}
+        function addImage(){data.images.push({url:'',caption:''});renderImages();updatePreview();}
+        function removeImage(i){if(data.images.length<=1)return;data.images.splice(i,1);renderImages();updatePreview();}
+
+        function escAttr(s){return s?String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+        function escHtml(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
+
+        function collectAll(){
+            document.querySelectorAll('#formContent input:not([data-mech]):not([data-iter]):not([data-img]), #formContent textarea:not([data-mech]):not([data-iter]):not([data-img]), #formContent select').forEach(el=>{if(el.id && data.hasOwnProperty(el.id)) data[el.id]=el.value;});
+            data.coverImageUrl=document.getElementById('coverImageUrl').value;
+            data.coverImageWidth=document.getElementById('coverImageWidth').value;
+            data.coverImageHeight=document.getElementById('coverImageHeight').value;
+            data.coverEffect=document.getElementById('coverEffect').value;
+            data.mechImageWidth=document.getElementById('mechImageWidth').value;
+            data.mechImageHeight=document.getElementById('mechImageHeight').value;
+            data.mechImageEffect=document.getElementById('mechImageEffect').value;
+            data.coverBgType=document.getElementById('coverBgType').value;
+            data.coverColor1=document.getElementById('coverColor1').value;
+            data.coverColor2=document.getElementById('coverColor2').value;
+            data.bodyBgColor=document.getElementById('bodyBgColor').value;
+            data.cardBgColor=document.getElementById('cardBgColor').value;
+            data.textColor=document.getElementById('textColor').value;
+            data.secondaryTextColor=document.getElementById('secondaryTextColor').value;
+            data.primaryColor=document.getElementById('primaryColor').value;
+            data.accentColor=document.getElementById('accentColor').value;
+            data.highlightBg=document.getElementById('highlightBg').value;
+            data.googleFontUrl=document.getElementById('googleFontUrl').value;
+            const fontSel=document.getElementById('fontSelect').value;
+            if(fontSel==='custom') data.fontFamily=document.getElementById('fontCustom').value;
+            else if(fontSel==='default') data.fontFamily='';
+            else data.fontFamily=fontSel;
+        }
+
+        function applyEffectStyle(effect){
+            if(effect==='shadow') return 'box-shadow:0 8px 20px rgba(0,0,0,0.5);';
+            if(effect==='rounded') return 'border-radius:15px;';
+            if(effect==='blur') return 'filter:blur(2px);';
+            if(effect==='grayscale') return 'filter:grayscale(1);';
+            if(effect==='float') return 'animation:float 3s ease-in-out infinite;';
+            return '';
+        }
+
+        function generateBinderHTML(){
+            collectAll();
+            const d=data;
+            const sponsorsList=d.sponsors?d.sponsors.split('\n').filter(s=>s.trim()).map(s=>`<li>${escHtml(s.trim())}</li>`).join(''):'';
+            const mechCards = d.mechSystems.filter(m=>m.name.trim()||m.type.trim()||m.description.trim()).map(m=>{
+                const imgHtml = m.imageUrl ? `<img class="mech-image" src="${escAttr(m.imageUrl)}" alt="${escAttr(m.name)}" style="width:${d.mechImageWidth};height:${d.mechImageHeight};object-fit:contain;${applyEffectStyle(d.mechImageEffect)}">` : '';
+                return `<div class="mech-card">
+                    <div class="mech-info">
+                        <h4>${escHtml(m.name)||'Subsystem'} (${escHtml(m.type)||'N/A'})</h4>
+                        <p>${escHtml(m.description)||''}</p>
+                        <p><strong>Materials:</strong> ${escHtml(m.materials)||'-'} &nbsp; <strong>Notes:</strong> ${escHtml(m.notes)||'-'}</p>
+                    </div>
+                    ${imgHtml}
+                </div>`;
+            }).join('');
+            const iterRows=d.iterations.filter(i=>i.date.trim()||i.change.trim()).map(i=>`<tr><td>${escHtml(i.date)||'-'}</td><td>${escHtml(i.change)||'-'}</td><td>${escHtml(i.reason)||'-'}</td><td>${escHtml(i.result)||'-'}</td></tr>`).join('');
+            const imageCards=d.images.filter(i=>i.url.trim()).map(i=>`<div class="image-card"><img src="${escAttr(i.url)}" alt="${escAttr(i.caption)}"><p class="caption">${escHtml(i.caption)||''}</p></div>`).join('');
+
+            const hasMech=d.mechSystems.some(m=>m.name.trim()||m.type.trim()||m.description.trim());
+            const hasIter=d.iterations.some(i=>i.date.trim()||i.change.trim());
+            const hasImages=d.images.some(i=>i.url.trim());
+            const hasSpecs=d.specWeight||d.specDimensions||d.specSpeed||d.specChassis||d.specIntake||d.specClimb||d.specOther;
+            const hasElec=d.controller||d.motorControllers||d.sensors||d.pneumatics||d.powerMgmt||d.communication;
+            const hasSoftware=d.programLang||d.keyFeatures||d.autonomous||d.vision||d.driverUI;
+            const hasDesign=d.designGoals||d.keyDecisions||d.tradeoffs||d.inspiration;
+
+            let coverBg=d.coverBgType==='solid'?`background:${d.coverColor1};`:`background:linear-gradient(135deg,${d.coverColor1} 0%,${d.coverColor2} 50%,${d.coverColor1} 100%);`;
+            let coverImgStyle=`width:${d.coverImageWidth};height:${d.coverImageHeight};object-fit:contain;${applyEffectStyle(d.coverEffect)}`;
+            let fontCSS=d.fontFamily?`font-family:${d.fontFamily};`:'';
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Binder - ${escHtml(d.teamNumber||'???')} ${escHtml(d.teamName||'Team')}</title>
+${d.googleFontUrl?`<link href="${escAttr(d.googleFontUrl)}" rel="stylesheet">`:''}
+<style>
+:root{--primary:${d.primaryColor};--accent:${d.accentColor};--bg:${d.bodyBgColor};--card-bg:${d.cardBgColor};--text:${d.textColor};--text-secondary:${d.secondaryTextColor};--highlight-bg:${d.highlightBg};--border:#e2e8f0;--radius:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;${fontCSS}}
+.container{max-width:960px;margin:0 auto;padding:20px 24px 60px;}
+.cover{${coverBg}color:#fff;border-radius:var(--radius);padding:30px;margin-bottom:28px;display:flex;align-items:center;gap:25px;flex-wrap:wrap;box-shadow:0 6px 30px rgba(0,0,0,0.2);}
+.cover .cover-image{flex-shrink:0;${coverImgStyle}}
+.cover .cover-text{flex:1;text-align:right;z-index:1;}
+.cover .team-number{font-size:3.5rem;font-weight:900;}
+.cover .team-name{font-size:1.6rem;font-weight:700;margin:5px 0;}
+.cover .subtitle{font-size:1rem;opacity:0.9;}
+.cover .robot-name-tag{display:inline-block;background:var(--accent);padding:5px 18px;border-radius:20px;font-weight:700;margin-top:8px;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.section{background:var(--card-bg);border-radius:var(--radius);padding:22px 26px;margin-bottom:18px;box-shadow:0 2px 12px rgba(0,0,0,0.05);border:1px solid var(--border);}
+.section h2{color:var(--primary);border-bottom:3px solid var(--accent);padding-bottom:8px;margin-bottom:14px;}
+.section h3{color:var(--primary);margin:12px 0 6px;}
+.highlight-box{background:var(--highlight-bg);border-left:4px solid var(--accent);padding:12px 16px;margin:8px 0;border-radius:0 8px 8px 0;}
+.mech-card{display:flex;gap:20px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.mech-card:last-child{border-bottom:none;}
+.mech-info{flex:1;}
+.mech-info h4{color:var(--primary);margin-bottom:6px;}
+.mech-image{max-width:200px;}
+.image-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:10px 0;}
+.image-card{background:var(--card-bg);border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.image-card img{width:100%;height:180px;object-fit:cover;}
+.image-card .caption{padding:8px 12px;font-size:0.85rem;color:var(--text-secondary);text-align:center;}
+table{width:100%;border-collapse:collapse;margin:10px 0;}
+th{background:#f1f5f9;padding:9px 12px;text-align:left;color:var(--primary);border-bottom:2px solid #cbd5e1;}
+td{padding:8px 12px;border-bottom:1px solid var(--border);}
+.spec-table td:first-child{font-weight:600;color:var(--primary);width:30%;}
+.footer{text-align:center;color:var(--text-secondary);font-size:0.8rem;padding:20px;border-top:1px solid var(--border);margin-top:20px;}
+@media print{body{background:#fff;}.section{box-shadow:none;}}
+</style></head>
+<body>
+<div class="container">
+    <div class="cover">
+        ${d.coverImageUrl?`<img class="cover-image" src="${escAttr(d.coverImageUrl)}" alt="Robot">`:''}
+        <div class="cover-text">
+            <div class="team-number">#${escHtml(d.teamNumber||'????')}</div>
+            <div class="team-name">${escHtml(d.teamName||'Team Name')}</div>
+            <div class="subtitle">${escHtml(d.season||'Season')} · Tech Binder</div>
+            ${d.robotName?`<div class="robot-name-tag">${escHtml(d.robotName)}</div>`:''}
+            ${d.location?`<div class="subtitle" style="margin-top:6px;">${escHtml(d.location)}</div>`:''}
+        </div>
+    </div>
+    <div class="section">
+        <h2>Team Information</h2>
+        <table class="spec-table"><tr><td>Team Number</td><td>#${escHtml(d.teamNumber||'-')}</td></tr><tr><td>Team Name</td><td>${escHtml(d.teamName||'-')}</td></tr><tr><td>Season</td><td>${escHtml(d.season||'-')}</td></tr><tr><td>Robot Name</td><td>${escHtml(d.robotName||'-')}</td></tr><tr><td>Location</td><td>${escHtml(d.location||'-')}</td></tr>${sponsorsList?`<tr><td>Sponsors</td><td><ul>${sponsorsList}</ul></td></tr>`:''}</table>
+        ${d.robotOverview?`<h3>Overview</h3><p>${escHtml(d.robotOverview)}</p>`:''}
+        ${d.strengths?`<div class="highlight-box"><strong>Core Strengths:</strong> ${escHtml(d.strengths)}</div>`:''}
+        ${d.playStyle?`<p style="margin-top:8px;">Play Style: ${escHtml(d.playStyle)}</p>`:''}
+    </div>
+    ${hasDesign?`<div class="section"><h2>Design Strategy</h2>${d.designGoals?`<h3>Goals</h3><p>${escHtml(d.designGoals)}</p>`:''}${d.keyDecisions?`<h3>Key Decisions</h3><p>${escHtml(d.keyDecisions)}</p>`:''}${d.tradeoffs?`<h3>Trade-offs</h3><p>${escHtml(d.tradeoffs)}</p>`:''}${d.inspiration?`<h3>Inspiration</h3><p>${escHtml(d.inspiration)}</p>`:''}</div>`:''}
+    ${hasMech?`<div class="section"><h2>Mechanical Subsystems</h2>${mechCards}</div>`:''}
+    ${hasElec?`<div class="section"><h2>Electronics</h2><table class="spec-table">${d.controller?`<tr><td>Controller</td><td>${escHtml(d.controller)}</td></tr>`:''}${d.motorControllers?`<tr><td>Motor Controllers</td><td>${escHtml(d.motorControllers)}</td></tr>`:''}${d.sensors?`<tr><td>Sensors</td><td>${escHtml(d.sensors)}</td></tr>`:''}${d.pneumatics?`<tr><td>Pneumatics</td><td>${escHtml(d.pneumatics)}</td></tr>`:''}${d.powerMgmt?`<tr><td>Power</td><td>${escHtml(d.powerMgmt)}</td></tr>`:''}${d.communication?`<tr><td>Communication</td><td>${escHtml(d.communication)}</td></tr>`:''}</table></div>`:''}
+    ${hasSoftware?`<div class="section"><h2>Software</h2>${d.programLang?`<p><strong>Language:</strong> ${escHtml(d.programLang)}</p>`:''}${d.keyFeatures?`<h3>Core Features</h3><p>${escHtml(d.keyFeatures)}</p>`:''}${d.autonomous?`<h3>Autonomous</h3><p>${escHtml(d.autonomous)}</p>`:''}${d.vision?`<h3>Vision</h3><p>${escHtml(d.vision)}</p>`:''}${d.driverUI?`<h3>Driver UI</h3><p>${escHtml(d.driverUI)}</p>`:''}</div>`:''}
+    ${hasIter?`<div class="section"><h2>Iterations</h2><table><tr><th>Date</th><th>Change</th><th>Reason</th><th>Outcome</th></tr>${iterRows}</table></div>`:''}
+    ${hasSpecs?`<div class="section"><h2>Specifications</h2><table class="spec-table">${d.specWeight?`<tr><td>Weight</td><td>${escHtml(d.specWeight)}</td></tr>`:''}${d.specDimensions?`<tr><td>Dimensions</td><td>${escHtml(d.specDimensions)}</td></tr>`:''}${d.specSpeed?`<tr><td>Max Speed</td><td>${escHtml(d.specSpeed)}</td></tr>`:''}${d.specChassis?`<tr><td>Chassis</td><td>${escHtml(d.specChassis)}</td></tr>`:''}${d.specIntake?`<tr><td>Scoring</td><td>${escHtml(d.specIntake)}</td></tr>`:''}${d.specClimb?`<tr><td>Climbing</td><td>${escHtml(d.specClimb)}</td></tr>`:''}${d.specOther?`<tr><td>Other</td><td>${escHtml(d.specOther)}</td></tr>`:''}</table></div>`:''}
+    ${hasImages?`<div class="section"><h2>Gallery</h2><div class="image-gallery">${imageCards}</div></div>`:''}
+    <div class="footer"><p>${escHtml(d.teamName||'Team')} · Tech Binder · ${escHtml(d.season||'')}</p></div>
+</div>
+</body></html>`;
+        }
+
+        function updatePreview(){document.getElementById('previewFrame').srcdoc=generateBinderHTML();}
+        function downloadBinder(){const html=generateBinderHTML();const blob=new Blob([html],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`TechBinder_${data.teamNumber||'0000'}.html`;a.click();showToast('Downloaded!');}
+        function copyHTML(){navigator.clipboard.writeText(generateBinderHTML()).then(()=>showToast('Copied!')).catch(()=>showToast('Copy failed'));}
+        function resetAll(){if(!confirm('Clear all data?'))return;Object.keys(data).forEach(k=>{if(Array.isArray(data[k]))data[k]=[];else if(!['coverBgType','coverEffect','mechImageEffect','fontFamily','googleFontUrl'].includes(k) && !k.startsWith('cover') && !k.startsWith('body') && !k.startsWith('card') && !k.startsWith('text') && !k.startsWith('secondary') && !k.startsWith('primary') && !k.startsWith('accent') && !k.startsWith('highlight') && !k.startsWith('mechImage'))data[k]='';});
+        data.coverBgType='gradient';data.coverColor1='#1a3c5e';data.coverColor2='#0f2740';data.bodyBgColor='#f8fafc';data.cardBgColor='#ffffff';data.textColor='#1e293b';data.secondaryTextColor='#475569';data.primaryColor='#1a3c5e';data.accentColor='#f97316';data.highlightBg='#fff7ed';data.coverEffect='none';data.mechImageEffect='none';data.coverImageWidth='45%';data.coverImageHeight='auto';data.mechImageWidth='100%';data.mechImageHeight='auto';data.fontFamily='';data.googleFontUrl='';
+        document.querySelectorAll('input:not([data-mech]):not([data-iter]):not([data-img]), textarea, select').forEach(e=>{if(e.tagName==='SELECT')e.selectedIndex=0;else e.value='';});
+        document.getElementById('coverColor1').value='#1a3c5e';document.getElementById('coverColor2').value='#0f2740';document.getElementById('bodyBgColor').value='#f8fafc';document.getElementById('cardBgColor').value='#ffffff';document.getElementById('textColor').value='#1e293b';document.getElementById('secondaryTextColor').value='#475569';document.getElementById('primaryColor').value='#1a3c5e';document.getElementById('accentColor').value='#f97316';document.getElementById('highlightBg').value='#fff7ed';document.getElementById('coverEffect').value='none';document.getElementById('mechImageEffect').value='none';
+        updateThemeTexts();initDynamicLists();updatePreview();showToast('Reset');}
+        function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+        document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(bt=>bt.classList.remove('active'));this.classList.add('active');document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.getElementById(this.dataset.tab).classList.add('active');}));
+        function updateThemeTexts(){
+            document.getElementById('coverColor1Text').textContent=document.getElementById('coverColor1').value;
+            document.getElementById('coverColor2Text').textContent=document.getElementById('coverColor2').value;
+            document.getElementById('bodyBgColorText').textContent=document.getElementById('bodyBgColor').value;
+            document.getElementById('cardBgColorText').textContent=document.getElementById('cardBgColor').value;
+            document.getElementById('textColorText').textContent=document.getElementById('textColor').value;
+            document.getElementById('secondaryTextColorText').textContent=document.getElementById('secondaryTextColor').value;
+            document.getElementById('primaryColorText').textContent=document.getElementById('primaryColor').value;
+            document.getElementById('accentColorText').textContent=document.getElementById('accentColor').value;
+            document.getElementById('highlightBgText').textContent=document.getElementById('highlightBg').value;
+            document.getElementById('coverColor2Group').style.display=document.getElementById('coverBgType').value==='gradient'?'':'none';
+        }
+        function updateFont(){document.getElementById('fontCustom').style.display=document.getElementById('fontSelect').value==='custom'?'block':'none';updatePreview();}
+        function resetTheme(){
+            document.getElementById('coverBgType').value='gradient';
+            document.getElementById('coverColor1').value='#1a3c5e';document.getElementById('coverColor2').value='#0f2740';
+            document.getElementById('bodyBgColor').value='#f8fafc';document.getElementById('cardBgColor').value='#ffffff';
+            document.getElementById('textColor').value='#1e293b';document.getElementById('secondaryTextColor').value='#475569';
+            document.getElementById('primaryColor').value='#1a3c5e';document.getElementById('accentColor').value='#f97316';
+            document.getElementById('highlightBg').value='#fff7ed';
+            document.getElementById('coverEffect').value='none';document.getElementById('mechImageEffect').value='none';
+            document.getElementById('coverImageWidth').value='45%';document.getElementById('coverImageHeight').value='auto';
+            document.getElementById('mechImageWidth').value='100%';document.getElementById('mechImageHeight').value='auto';
+            document.getElementById('fontSelect').value='default';document.getElementById('fontCustom').style.display='none';
+            updateThemeTexts();updatePreview();
+        }
+        document.getElementById('formContent').addEventListener('input',e=>{if(e.target.closest('.dynamic-item'))return;updatePreview();if(['coverColor1','coverColor2','bodyBgColor','cardBgColor','textColor','secondaryTextColor','primaryColor','accentColor','highlightBg'].includes(e.target.id))updateThemeTexts();});
+        document.getElementById('formContent').addEventListener('change',e=>{if(e.target.id==='coverBgType')updateThemeTexts();if(e.target.id==='fontSelect')updateFont();updatePreview();});
+        initDynamicLists();updateThemeTexts();updatePreview();
+    </script>
+</body>
+</html>
